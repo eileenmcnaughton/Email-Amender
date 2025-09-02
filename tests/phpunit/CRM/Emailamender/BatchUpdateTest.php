@@ -21,8 +21,9 @@ use Civi\Test\TransactionalInterface;
 class CRM_Emailamender_BatchUpdateTest extends \PHPUnit\Framework\TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 
   use Civi\Test\Api3TestTrait;
+  use Civi\Test\EntityTrait;
 
-  protected $maxExistingActivityID;
+  protected int $maxExistingActivityID;
 
   /**
    * @return \Civi\Test\CiviEnvBuilder
@@ -37,9 +38,7 @@ class CRM_Emailamender_BatchUpdateTest extends \PHPUnit\Framework\TestCase imple
   }
 
   public function setUp(): void {
-    $this->callAPISuccess('Setting', 'create', [
-      'emailamender.email_amender_enabled' => 'true',
-    ]);
+    \Civi::settings()->set('emailamender.email_amender_enabled', TRUE);
     // Cleanup first in  case any values are 'hanging around'
     $this->callApiSuccess('EmailAmender', 'batch_update', [])['values'];
     parent::setUp();
@@ -57,11 +56,9 @@ class CRM_Emailamender_BatchUpdateTest extends \PHPUnit\Framework\TestCase imple
 
   /**
    * Test for email addresses on contacts created via the API.
-   *
-   * @throws \CRM_Core_Exception
    */
   public function testBatchUpdate() {
-    $this->callApiSuccess('Setting', 'create', ['emailamender.email_amender_enabled' => FALSE]);
+    \Civi::settings()->set('emailamender.email_amender_enabled', FALSE);
     $testEmailCorrections = [
       // Test contacts with an incorrect top level domain.
       'john@gmail.cpm' => 'john@gmail.com',
@@ -86,7 +83,7 @@ class CRM_Emailamender_BatchUpdateTest extends \PHPUnit\Framework\TestCase imple
     ];
 
     foreach ($testEmailCorrections as $incorrectEmailAddress => $expectedOutput) {
-      $this->ids['Contact'][] = $this->callApiSuccess('Contact', 'create', ['contact_type' => 'Individual', 'email' => $incorrectEmailAddress])['id'];
+      $this->createTestEntity('Contact', ['contact_type' => 'Individual', 'email_primary.email' => $incorrectEmailAddress], $incorrectEmailAddress);
     }
 
     $candidates = $this->callApiSuccess('EmailAmender', 'find_candidates', [])['values'];
@@ -100,7 +97,7 @@ class CRM_Emailamender_BatchUpdateTest extends \PHPUnit\Framework\TestCase imple
     $this->assertCount(2, $candidates);
 
     $this->callApiSuccessGetCount('Activity', ['activity_type_id' => 'corrected_email_address', 'id' => ['>' => $this->maxExistingActivityID]], 10);
-    $this->assertEquals('john@gmail.com', $this->callAPISuccessGetValue('Contact', ['id' => $this->ids['Contact'][0], 'return' => 'display_name']));
+    $this->assertEquals('john@gmail.com', $this->callAPISuccessGetValue('Contact', ['id' => $this->ids['Contact']['john@gmail.cpm'], 'return' => 'display_name']));
   }
 
 }
