@@ -89,8 +89,6 @@ class CRM_Emailamender_ExtensionUtil {
 
 use CRM_Emailamender_ExtensionUtil as E;
 
-($GLOBALS['_PathLoad'][0] ?? require __DIR__ . '/mixin/lib/pathload-0.php');
-pathload()->addSearchDir(__DIR__ . '/mixin/lib');
 spl_autoload_register('_emailamender_civix_class_loader', TRUE, TRUE);
 
 function _emailamender_civix_class_loader($class) {
