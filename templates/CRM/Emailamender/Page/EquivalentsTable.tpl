@@ -45,6 +45,6 @@
 </table>
   {if $hasEditPermission}
     <input class="add_new_equivalent" type="button" value="Add new equivalent" filter_id="{$filter_id}"></input>
-    <input class="save_correction_changes save_changes_button" type="button" value="{ts}Save changes{/ts}" style="display: none" filter_id="{$filter_id}"></input>
+    <input class="save_correction_changes save_changes_button" type="button" value="{ts escape='htmlattribute'}Save changes{/ts}" style="display: none" filter_id="{$filter_id}"></input>
   {/if}
 </div>
